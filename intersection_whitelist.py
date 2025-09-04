@@ -232,21 +232,20 @@ class IntersectionWhitelistGenerator:
         for item in binance_intersection:
             all_pairs.add(item['symbol'])
             exchange_details[item['symbol']] = item
+            exchange_details[item['symbol']]['exchanges'] = ['binance']  # 修正：初始化exchanges列表
         
         for item in okx_intersection:
             all_pairs.add(item['symbol'])
             if item['symbol'] in exchange_details:
-                exchange_details[item['symbol']]['exchanges'] = \
-                    exchange_details[item['symbol']].get('exchanges', ['binance']) + ['okx']
+                exchange_details[item['symbol']]['exchanges'].append('okx')  # 修正：使用方括号
             else:
                 exchange_details[item['symbol']] = item
-                exchange_details[item['symbol']]['exchanges') = ['okx']
+                exchange_details[item['symbol']]['exchanges'] = ['okx']  # 修正：使用方括号
         
         for item in bybit_intersection:
             all_pairs.add(item['symbol'])
             if item['symbol'] in exchange_details:
-                exchange_details[item['symbol']]['exchanges'] = \
-                    exchange_details[item['symbol']].get('exchanges', []) + ['bybit']
+                exchange_details[item['symbol']]['exchanges'].append('bybit')  # 修正：使用append
             else:
                 exchange_details[item['symbol']] = item
                 exchange_details[item['symbol']]['exchanges'] = ['bybit']
@@ -306,3 +305,7 @@ class IntersectionWhitelistGenerator:
             exchanges = pair.get('exchanges', [pair['exchange']])
             print(f"{i}. {pair['symbol']} - 市值排名:{pair['market_cap_rank']} "
                   f"交易量排名:{pair['volume_rank']} 交易所:{','.join(exchanges)}")
+
+if __name__ == "__main__":
+    generator = IntersectionWhitelistGenerator() 
+    generator.save_whitelist()
