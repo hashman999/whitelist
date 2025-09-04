@@ -1,0 +1,47 @@
+# GitHub Actions工作流
+github_workflow = """
+name: Generate Intersection Whitelist
+on:
+  schedule:
+    - cron: '0 */8 * * *'  # 每8小时运行一次
+  workflow_dispatch:
+
+jobs:
+  generate-whitelist:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests pandas
+    
+    - name: Generate intersection whitelist
+      run: python intersection_whitelist.py
+    
+    - name: Commit and push
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add intersection_whitelist.json
+        git commit -m "Update intersection whitelist $(date '+%Y-%m-%d %H:%M:%S')" || exit 0
+        git push
+
+    - name: Create summary
+      run: |
+        echo "## 白名单更新摘要" >> $GITHUB_STEP_SUMMARY
+        echo "- 生成时间: $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "- 总交易对: $(jq '.metadata.total_pairs' intersection_whitelist.json)" >> $GITHUB_STEP_SUMMARY
+        echo "- 币安交集: $(jq '.exchange_breakdown.binance_pairs' intersection_whitelist.json)" >> $GITHUB_STEP_SUMMARY
+        echo "- OKX交集: $(jq '.exchange_breakdown.okx_pairs' intersection_whitelist.json)" >> $GITHUB_STEP_SUMMARY
+        echo "- Bybit交集: $(jq '.exchange_breakdown.bybit_pairs' intersection_whitelist.json)" >> $GITHUB_STEP_SUMMARY
+"""
+
+if __name__ == "__main__":
+    generator = IntersectionWhitelistGenerator() 
+    generator.save_whitelist()
